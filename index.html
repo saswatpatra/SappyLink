@@ -2,34 +2,88 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Sappy Link Shortener</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sappy Link 🔗</title>
   <style>
-    body {
-      font-family: sans-serif;
-      max-width: 500px;
-      margin: 4rem auto;
-      padding: 2rem;
+    :root {
+      --primary: #6c5ce7;
+      --bg: #f9f9ff;
+      --text: #333;
+      --border: #ddd;
     }
-    input, button {
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 2rem;
+      display: flex;
+      justify-content: center;
+    }
+    .container {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      max-width: 480px;
       width: 100%;
-      margin: 0.5rem 0;
-      padding: 0.6rem;
+    }
+    h1 {
+      color: var(--primary);
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
       font-size: 1rem;
     }
+    button {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: var(--primary);
+      color: white;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    button:hover {
+      background: #5a4bd6;
+    }
     #short-url {
-      margin-top: 1rem;
+      margin-top: 1.25rem;
       font-weight: bold;
+      color: green;
+      word-break: break-all;
+    }
+    a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
 
-  <h2>🔗 Sappy Link Shortener</h2>
-  <input type="text" id="long-url" placeholder="Enter long URL">
-  <input type="text" id="custom-slug" placeholder="Custom short name (e.g. vibe123)">
-  <button onclick="shorten()">Shorten URL</button>
+  <div class="container">
+    <h1>🔗 Sappy Link</h1>
+    <input type="text" id="long-url" placeholder="Paste your long URL here">
+    <input type="text" id="custom-slug" placeholder="Custom slug (e.g., vibe123)">
+    <button id="shorten-btn">Shorten URL</button>
 
-  <div id="short-url"></div>
+    <div id="short-url"></div>
+  </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
@@ -50,9 +104,11 @@
     async function shorten() {
       const longUrl = document.getElementById("long-url").value.trim();
       const slug = document.getElementById("custom-slug").value.trim();
+      const output = document.getElementById("short-url");
 
       if (!longUrl || !slug) {
-        alert("Please enter both the long URL and a custom short name.");
+        output.style.color = "red";
+        output.innerText = "Please enter both URL and slug.";
         return;
       }
 
@@ -60,18 +116,23 @@
       const exists = await getDoc(ref);
 
       if (exists.exists()) {
-        alert("That slug is already taken. Try another.");
+        output.style.color = "red";
+        output.innerText = "This slug is already taken. Try another.";
         return;
       }
 
       await setDoc(ref, { url: longUrl });
       const shortUrl = `${location.origin}/${slug}`;
-      document.getElementById("short-url").innerText = `✅ Short link: ${shortUrl}`;
+      output.style.color = "green";
+      output.innerHTML = `✅ Short link: <a href="${shortUrl}" target="_blank">${shortUrl}</a>`;
     }
 
-    // Auto-redirect logic when visiting a slug
+    // Bind button click (fix for module scope)
+    document.getElementById("shorten-btn").addEventListener("click", shorten);
+
+    // Redirect if on a short link
     const path = window.location.pathname.slice(1);
-    if (path) {
+    if (path && !path.includes(".")) { // avoids triggering on favicon or other file paths
       (async () => {
         const ref = doc(db, "links", path);
         const snap = await getDoc(ref);
