@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sappy Link Shortener</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 500px;
+      margin: 4rem auto;
+      padding: 2rem;
+    }
+    input, button {
+      width: 100%;
+      margin: 0.5rem 0;
+      padding: 0.6rem;
+      font-size: 1rem;
+    }
+    #short-url {
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>🔗 Sappy Link Shortener</h2>
+  <input type="text" id="long-url" placeholder="Enter long URL">
+  <input type="text" id="custom-slug" placeholder="Custom short name (e.g. vibe123)">
+  <button onclick="shorten()">Shorten URL</button>
+
+  <div id="short-url"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDQ7EQOvuraFKtGCwCq_R4T-KrY3zbq3mQ",
+      authDomain: "sappylinkshort.firebaseapp.com",
+      projectId: "sappylinkshort",
+      storageBucket: "sappylinkshort.firebasestorage.app",
+      messagingSenderId: "428498695397",
+      appId: "1:428498695397:web:931670a27f9efc4dc7500c"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function shorten() {
+      const longUrl = document.getElementById("long-url").value.trim();
+      const slug = document.getElementById("custom-slug").value.trim();
+
+      if (!longUrl || !slug) {
+        alert("Please enter both the long URL and a custom short name.");
+        return;
+      }
+
+      const ref = doc(db, "links", slug);
+      const exists = await getDoc(ref);
+
+      if (exists.exists()) {
+        alert("That slug is already taken. Try another.");
+        return;
+      }
+
+      await setDoc(ref, { url: longUrl });
+      const shortUrl = `${location.origin}/${slug}`;
+      document.getElementById("short-url").innerText = `✅ Short link: ${shortUrl}`;
+    }
+
+    // Auto-redirect logic when visiting a slug
+    const path = window.location.pathname.slice(1);
+    if (path) {
+      (async () => {
+        const ref = doc(db, "links", path);
+        const snap = await getDoc(ref);
+        if (snap.exists()) {
+          window.location.href = snap.data().url;
+        }
+      })();
+    }
+  </script>
+
+</body>
+</html>
