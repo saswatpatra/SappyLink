@@ -1,87 +1,128 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sappy Link 🔗</title>
   <style>
     :root {
       --primary: #6c5ce7;
-      --bg: #f9f9ff;
-      --text: #333;
-      --border: #ddd;
+      --background: #f5f6fa;
+      --text: #2f3542;
+      --error: #e74c3c;
+      --success: #2ecc71;
     }
+
     * {
       box-sizing: border-box;
     }
+
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background: var(--bg);
-      color: var(--text);
       margin: 0;
-      padding: 2rem;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--background);
+      color: var(--text);
       display: flex;
+      align-items: center;
       justify-content: center;
+      min-height: 100vh;
     }
+
     .container {
-      background: #fff;
-      padding: 2rem;
-      border-radius: 16px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      max-width: 480px;
-      width: 100%;
-    }
-    h1 {
-      color: var(--primary);
-      font-size: 1.8rem;
-      margin-bottom: 1rem;
+      background: white;
+      padding: 2.5rem;
+      border-radius: 20px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+      max-width: 500px;
+      width: 90%;
       text-align: center;
     }
+
+    h1 {
+      color: var(--primary);
+      margin-bottom: 1.5rem;
+      font-size: 2rem;
+    }
+
     input {
       width: 100%;
       padding: 0.75rem 1rem;
-      margin-bottom: 1rem;
-      border: 1px solid var(--border);
-      border-radius: 8px;
+      margin: 0.5rem 0;
+      border-radius: 10px;
+      border: 1px solid #ccc;
       font-size: 1rem;
+      transition: 0.2s ease;
     }
+
+    input:focus {
+      border-color: var(--primary);
+      outline: none;
+    }
+
     button {
       width: 100%;
       padding: 0.75rem 1rem;
-      background: var(--primary);
-      color: white;
+      margin-top: 1rem;
       font-size: 1rem;
+      background-color: var(--primary);
+      color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       cursor: pointer;
       transition: background 0.2s ease;
     }
+
     button:hover {
-      background: #5a4bd6;
+      background-color: #574bda;
     }
+
     #short-url {
-      margin-top: 1.25rem;
+      margin-top: 1.5rem;
       font-weight: bold;
-      color: green;
-      word-break: break-all;
+      word-break: break-word;
+      font-size: 1rem;
     }
+
+    .success {
+      color: var(--success);
+    }
+
+    .error {
+      color: var(--error);
+    }
+
     a {
       color: var(--primary);
       text-decoration: none;
     }
+
     a:hover {
       text-decoration: underline;
+    }
+
+    .loader {
+      border: 5px solid #eee;
+      border-top: 5px solid var(--primary);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 1rem;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
   </style>
 </head>
 <body>
 
-  <div class="container">
+  <div class="container" id="main-ui">
     <h1>🔗 Sappy Link</h1>
-    <input type="text" id="long-url" placeholder="Paste your long URL here">
-    <input type="text" id="custom-slug" placeholder="Custom slug (e.g., vibe123)">
+    <input type="text" id="long-url" placeholder="Paste your long URL" />
+    <input type="text" id="custom-slug" placeholder="Custom slug (e.g., yt2025)" />
     <button id="shorten-btn">Shorten URL</button>
-
     <div id="short-url"></div>
   </div>
 
@@ -101,14 +142,20 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    async function shorten() {
-      const longUrl = document.getElementById("long-url").value.trim();
-      const slug = document.getElementById("custom-slug").value.trim();
-      const output = document.getElementById("short-url");
+    const shortenBtn = document.getElementById("shorten-btn");
+    const longUrlInput = document.getElementById("long-url");
+    const slugInput = document.getElementById("custom-slug");
+    const resultBox = document.getElementById("short-url");
+
+    shortenBtn.addEventListener("click", async () => {
+      const longUrl = longUrlInput.value.trim();
+      const slug = slugInput.value.trim();
+      resultBox.className = "";
+      resultBox.textContent = "";
 
       if (!longUrl || !slug) {
-        output.style.color = "red";
-        output.innerText = "Please enter both URL and slug.";
+        resultBox.className = "error";
+        resultBox.textContent = "❌ Please fill in both fields.";
         return;
       }
 
@@ -116,28 +163,39 @@
       const exists = await getDoc(ref);
 
       if (exists.exists()) {
-        output.style.color = "red";
-        output.innerText = "This slug is already taken. Try another.";
+        resultBox.className = "error";
+        resultBox.textContent = "❌ This slug is already taken.";
         return;
       }
 
       await setDoc(ref, { url: longUrl });
       const shortUrl = `${location.origin}/${slug}`;
-      output.style.color = "green";
-      output.innerHTML = `✅ Short link: <a href="${shortUrl}" target="_blank">${shortUrl}</a>`;
-    }
+      resultBox.className = "success";
+      resultBox.innerHTML = `✅ Short link created: <a href="${shortUrl}" target="_blank">${shortUrl}</a>`;
 
-    // Bind button click (fix for module scope)
-    document.getElementById("shorten-btn").addEventListener("click", shorten);
+      longUrlInput.value = "";
+      slugInput.value = "";
+    });
 
-    // Redirect if on a short link
+    // Auto-redirect on slug visit
     const path = window.location.pathname.slice(1);
-    if (path && !path.includes(".")) { // avoids triggering on favicon or other file paths
+    if (path && !path.includes(".")) {
+      document.body.innerHTML = `
+        <div style="display:flex;flex-direction:column;justify-content:center;align-items:center;height:100vh;text-align:center;">
+          <div class="loader"></div>
+          <p>🔄 Redirecting to your link...</p>
+        </div>
+      `;
       (async () => {
         const ref = doc(db, "links", path);
         const snap = await getDoc(ref);
         if (snap.exists()) {
           window.location.href = snap.data().url;
+        } else {
+          document.body.innerHTML = `
+            <h2 style="text-align:center;color:var(--error);margin-top:2rem;">
+              ❌ Link not found.<br><a href="/" style="color:var(--primary);">Go back to Sappy Link</a>
+            </h2>`;
         }
       })();
     }
