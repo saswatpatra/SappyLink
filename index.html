@@ -1,205 +1,441 @@
 <!DOCTYPE html>
-<html lang="="en">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sappy Link 🔗</title>
-  <style>
-    :root {
-      --primary: #6c5ce7;
-      --background: #f5f6fa;
-      --text: #2f3542;
-      --error: #e74c3c;
-      --success: #2ecc71;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SnipURL - Minimal URL Shortener</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-light: #3b82f6;
+            --accent: #facc15;
+            --accent-dark: #eab308;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --bg: #f8fafc;
+        }
 
-    * {
-      box-sizing: border-box;
-    }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background-color: var(--background);
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-    }
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
 
-    .container {
-      background: white;
-      padding: 2.5rem;
-      border-radius: 20px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-      max-width: 500px;
-      width: 90%;
-      text-align: center;
-    }
+        /* Background animation */
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(40px);
+            opacity: 0.2;
+            z-index: -1;
+        }
 
-    h1 {
-      color: var(--primary);
-      margin-bottom: 1.5rem;
-      font-size: 2rem;
-    }
+        .blob-1 {
+            background: var(--primary);
+            width: 300px;
+            height: 300px;
+            top: -100px;
+            left: -100px;
+            animation: float 15s infinite ease-in-out;
+        }
 
-    input {
-      width: 100%;
-      padding: 0.75rem 1rem;
-      margin: 0.5rem 0;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-      font-size: 1rem;
-      transition: 0.2s ease;
-    }
+        .blob-2 {
+            background: var(--accent);
+            width: 400px;
+            height: 400px;
+            bottom: -150px;
+            right: -100px;
+            animation: float 18s infinite ease-in-out reverse;
+        }
 
-    input:focus {
-      border-color: var(--primary);
-      outline: none;
-    }
+        @keyframes float {
+            0%, 100% {
+                transform: translate(0, 0);
+            }
+            50% {
+                transform: translate(50px, 50px);
+            }
+        }
 
-    button {
-      width: 100%;
-      padding: 0.75rem 1rem;
-      margin-top: 1rem;
-      font-size: 1rem;
-      background-color: var(--primary);
-      color: white;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: background 0.2s ease;
-    }
+        /* Main container */
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 2rem;
+            text-align: center;
+        }
 
-    button:hover {
-      background-color: #574bda;
-    }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+        }
 
-    #short-url {
-      margin-top: 1.5rem;
-      font-weight: bold;
-      word-break: break-word;
-      font-size: 1rem;
-    }
+        .subtitle {
+            color: var(--text-light);
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
 
-    .success {
-      color: var(--success);
-    }
+        /* Form styles */
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
 
-    .error {
-      color: var(--error);
-    }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text);
+        }
 
-    a {
-      color: var(--primary);
-      text-decoration: none;
-    }
+        input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
 
-    a:hover {
-      text-decoration: underline;
-    }
+        input:focus {
+            outline: none;
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
 
-    .loader {
-      border: 5px solid #eee;
-      border-top: 5px solid var(--primary);
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-      margin-bottom: 1rem;
-    }
+        input::placeholder {
+            color: #94a3b8;
+        }
 
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-  </style>
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn:hover {
+            background-color: var(--primary-light);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-accent {
+            background-color: var(--accent);
+            color: var(--text);
+        }
+
+        .btn-accent:hover {
+            background-color: var(--accent-dark);
+        }
+
+        /* Result section */
+        .result {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-url {
+            font-size: 1.2rem;
+            word-break: break-all;
+            margin-bottom: 1rem;
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        /* Examples section */
+        .examples {
+            margin-top: 3rem;
+            text-align: center;
+        }
+
+        .examples h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: var(--text-light);
+        }
+
+        .example-list {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .example-item {
+            background-color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
+        }
+
+        .example-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 4rem;
+            text-align: center;
+            color: var(--text-light);
+            padding: 1rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .container {
+                padding: 1.5rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .example-list {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+        /* Loading spinner */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
+    <!-- Background blobs -->
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
 
-  <div class="container" id="main-ui">
-    <h1>🔗 Sappy Link</h1>
-    <input type="text" id="long-url" placeholder="Paste your long URL" />
-    <input type="text" id="custom-slug" placeholder="Custom slug (e.g., yt2025)" />
-    <button id="shorten-btn">Shorten URL</button>
-    <div id="short-url"></div>
-  </div>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDQ7EQOvuraFKtGCwCq_R4T-KrY3zbq3mQ",
-      authDomain: "sappylinkshort.firebaseapp.com",
-      projectId: "sappylinkshort",
-      storageBucket: "sappylinkshort.firebasestorage.app",
-      messagingSenderId: "428498695397",
-      appId: "1:428498695397:web:931670a27f9efc4dc7500c"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    const shortenBtn = document.getElementById("shorten-btn");
-    const longUrlInput = document.getElementById("long-url");
-    const slugInput = document.getElementById("custom-slug");
-    const resultBox = document.getElementById("short-url");
-
-    shortenBtn.addEventListener("click", async () => {
-      const longUrl = longUrlInput.value.trim();
-      const slug = slugInput.value.trim();
-      resultBox.className = "";
-      resultBox.textContent = "";
-
-      if (!longUrl || !slug) {
-        resultBox.className = "error";
-        resultBox.textContent = "❌ Please fill in both fields.";
-        return;
-      }
-
-      const ref = doc(db, "links", slug);
-      const exists = await getDoc(ref);
-
-      if (exists.exists()) {
-        resultBox.className = "error";
-        resultBox.textContent = "❌ This slug is already taken.";
-        return;
-      }
-
-      await setDoc(ref, { url: longUrl });
-      const shortUrl = `${location.origin}/${slug}`;
-      resultBox.className = "success";
-      resultBox.innerHTML = `✅ Short link created: <a href="${shortUrl}" target="_blank">${shortUrl}</a>`;
-
-      longUrlInput.value = "";
-      slugInput.value = "";
-    });
-
-    // Auto-redirect on slug visit
-    const path = window.location.pathname.slice(1);
-    if (path && !path.includes(".")) {
-      document.body.innerHTML = `
-        <div style="display:flex;flex-direction:column;justify-content:center;align-items:center;height:100vh;text-align:center;">
-          <div class="loader"></div>
-          <p>🔄 Redirecting to your link...</p>
+    <div class="container">
+        <h1>SnipURL</h1>
+        <p class="subtitle">A minimal URL shortener that's fast and easy to use</p>
+        
+        <div class="form-group">
+            <label for="long-url">Your long URL</label>
+            <input type="url" id="long-url" placeholder="https://example.com/very/long/url/that/needs/shortening">
         </div>
-      `;
-      (async () => {
-        const ref = doc(db, "links", path);
-        const snap = await getDoc(ref);
-        if (snap.exists()) {
-          window.location.href = snap.data().url;
-        } else {
-          document.body.innerHTML = `
-            <h2 style="text-align:center;color:var(--error);margin-top:2rem;">
-              ❌ Link not found.<br><a href="/" style="color:var(--primary);">Go back to Sappy Link</a>
-            </h2>`;
-        }
-      })();
-    }
-  </script>
+        
+        <div class="form-group">
+            <label for="custom-slug">Custom slug (optional)</label>
+            <input type="text" id="custom-slug" placeholder="my-custom-link">
+        </div>
+        
+        <button id="generate-btn" class="btn">
+            <span id="btn-text">Generate Short Link</span>
+            <span id="btn-spinner" class="spinner" style="display: none;"></span>
+        </button>
+        
+        <div id="result" class="result">
+            <p class="result-url" id="short-url">Your shortened URL will appear here</p>
+            <button id="copy-btn" class="btn btn-accent">Copy to Clipboard</button>
+        </div>
+        
+        <div class="examples">
+            <h2>Popular examples</h2>
+            <div class="example-list">
+                <div class="example-item">/yt → YouTube</div>
+                <div class="example-item">/resume → My Resume</div>
+                <div class="example-item">/portfolio → My Work</div>
+                <div class="example-item">/blog → My Blog</div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        Made with 💙 by YourName
+    </footer>
 
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
+        import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-database.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDQ7EQOvuraFKtGCwCq_R4T-KrY3zbq3mQ",
+            authDomain: "sappylinkshort.firebaseapp.com",
+            databaseURL: "https://sappylinkshort-default-rtdb.firebaseio.com",
+            projectId: "sappylinkshort",
+            storageBucket: "sappylinkshort.appspot.com",
+            messagingSenderId: "428498695397",
+            appId: "1:428498695397:web:931670a27f9efc4dc7500c"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const generateBtn = document.getElementById('generate-btn');
+            const copyBtn = document.getElementById('copy-btn');
+            const longUrlInput = document.getElementById('long-url');
+            const customSlugInput = document.getElementById('custom-slug');
+            const resultDiv = document.getElementById('result');
+            const shortUrlP = document.getElementById('short-url');
+            const btnText = document.getElementById('btn-text');
+            const btnSpinner = document.getElementById('btn-spinner');
+            
+            // Generate short URL with Firebase
+            generateBtn.addEventListener('click', async function() {
+                const longUrl = longUrlInput.value.trim();
+                let customSlug = customSlugInput.value.trim();
+                
+                if (!longUrl) {
+                    alert('Please enter a URL to shorten');
+                    return;
+                }
+                
+                // Validate URL format
+                try {
+                    new URL(longUrl);
+                } catch (e) {
+                    alert('Please enter a valid URL (include http:// or https://)');
+                    return;
+                }
+                
+                // Show loading state
+                btnText.textContent = 'Generating...';
+                btnSpinner.style.display = 'inline-block';
+                generateBtn.disabled = true;
+                
+                try {
+                    // Generate slug if not provided
+                    if (!customSlug) {
+                        customSlug = generateRandomSlug();
+                    } else {
+                        // Clean up custom slug
+                        customSlug = customSlug.toLowerCase()
+                            .replace(/\s+/g, '-') // Replace spaces with -
+                            .replace(/[^\w\-]+/g, '') // Remove all non-word chars
+                            .replace(/\-\-+/g, '-') // Replace multiple - with single
+                            .replace(/^-+/, '') // Trim - from start
+                            .replace(/-+$/, ''); // Trim - from end
+                    }
+                    
+                    // Check if slug already exists
+                    const slugRef = ref(db, 'urls/' + customSlug);
+                    const snapshot = await get(slugRef);
+                    
+                    if (snapshot.exists()) {
+                        alert('This slug is already in use. Please try a different one.');
+                        return;
+                    }
+                    
+                    // Save to Firebase
+                    await set(slugRef, {
+                        longUrl: longUrl,
+                        createdAt: new Date().toISOString(),
+                        clicks: 0
+                    });
+                    
+                    // Show result
+                    const baseUrl = window.location.origin;
+                    const shortUrl = `${baseUrl}/${customSlug}`;
+                    shortUrlP.textContent = shortUrl;
+                    resultDiv.classList.add('show');
+                    
+                    // Reset form
+                    customSlugInput.value = customSlug;
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('An error occurred. Please try again.');
+                } finally {
+                    // Reset button state
+                    btnText.textContent = 'Generate Short Link';
+                    btnSpinner.style.display = 'none';
+                    generateBtn.disabled = false;
+                }
+            });
+            
+            // Copy to clipboard
+            copyBtn.addEventListener('click', function() {
+                const shortUrl = shortUrlP.textContent;
+                navigator.clipboard.writeText(shortUrl).then(() => {
+                    copyBtn.textContent = 'Copied!';
+                    setTimeout(() => {
+                        copyBtn.textContent = 'Copy to Clipboard';
+                    }, 2000);
+                });
+            });
+            
+            // Generate random slug (helper function)
+            function generateRandomSlug() {
+                const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+                let result = '';
+                for (let i = 0; i < 6; i++) {
+                    result += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                return result;
+            }
+
+            // Handle redirect if someone visits a short URL
+            const path = window.location.pathname.substring(1);
+            if (path && !path.includes('index.html')) {
+                (async () => {
+                    const slugRef = ref(db, 'urls/' + path);
+                    const snapshot = await get(slugRef);
+                    
+                    if (snapshot.exists()) {
+                        // Update click count
+                        const data = snapshot.val();
+                        await set(ref(db, 'urls/' + path + '/clicks'), (data.clicks || 0) + 1);
+                        
+                        // Redirect to original URL
+                        window.location.href = data.longUrl;
+                    }
+                })();
+            }
+        });
+    </script>
 </body>
 </html>
